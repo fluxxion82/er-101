@@ -67,6 +67,8 @@ _trampoline:
   rjmp    program_start
 
   .org  PROGRAM_START_OFFSET
+  // Exported so arch/avr32/er-101.ld can assert it sits at PROGRAM_START_ADDRESS.
+  .global program_start
 program_start:
   // Jump to the C runtime startup routine.
   lda.w   pc, _stext

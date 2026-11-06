@@ -59,20 +59,23 @@ tool-versions:
 
 $(objects): scripts/env.mk
 
-# Final linking of the ELF executable. The map file is kept next to it.
-$(build_dir)/$(program_name).elf: $(objects) $(libraries)
+# Final linking of the ELF executable. The map file is kept next to it and
+# tools/elfcheck.py verifies the layout before the hex is produced.
+$(build_dir)/$(program_name).elf: $(objects) $(libraries) $(arch_dir)/$(ARCH)/er-101.ld
 	@mkdir -p $(@D)
 	@echo $(describe_env) LINK $(describe_target)
 	@$(LD) $(CFLAGS) -o $@ $(objects) $(libraries) $(LFLAGS) -Wl,-Map=$(@:.elf=.map)
+	@$(PYTHON) tools/elfcheck.py $@
 
-# Strip the executable down to a memory-loadable binary.
+# Strip the executable down to a memory-loadable binary and check the artifact.
 $(build_dir)/$(program_name).hex: $(build_dir)/$(program_name).elf
 	@echo $(describe_env) OBJCOPY $(describe_target)
 	@mkdir -p $(@D)
 	@$(SIZE) $<
 	@$(OBJCOPY) -O ihex -R .eeprom -R .fuse -R .lock -R .signature $< $@
+	@$(PYTHON) tools/hexcheck.py $@
 
-# A failed step must not leave a hex or ELF behind that looks good.
+# A failed check must not leave a hex or ELF behind that looks good.
 .DELETE_ON_ERROR:
 
 clean:

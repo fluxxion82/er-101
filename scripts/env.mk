@@ -45,8 +45,10 @@ include scripts/avr32.mk
 symbols += BOARD=USER_BOARD
 
 CFLAGS.avr32 = -mrelax -mno-cond-exec-before-reload
-LFLAGS.avr32 = -Wl,--relax -Wl,-e,_trampoline \
-	-nostartfiles --section-start=.ref_tables=0x80017360 \
+# arch/avr32/er-101.ld fixes the flash layout: entry at _trampoline, program_start
+# at 0x80002000, .ref_tables pinned at 0x80017360, with ASSERTs on the limits.
+# (The upstream line passed --section-start without -Wl, so the driver dropped it.)
+LFLAGS.avr32 = -Wl,--relax -nostartfiles -T $(arch_dir)/$(ARCH)/er-101.ld \
 	-L$(asf_dir)/avr32/utils/libs/dsplib/at32ucr3fp/gcc \
 	-ldsp-at32ucr3fp-dspspeed_opt
 
