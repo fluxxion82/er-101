@@ -32,33 +32,48 @@ includes += src \
 
 libraries :=
 
-# Recursive search for source files
-cpp_sources := $(foreach D,$(src_dirs),$(call rwildcard,$D,*.cpp)) 
-c_sources := $(foreach D,$(src_dirs),$(call rwildcard,$D,*.c))
-S_sources := $(foreach D,$(src_dirs),$(call rwildcard,$D,*.S)) 
+# Recursive search for source files, sorted so the link order (and so the image)
+# does not depend on the make version or the file system.
+cpp_sources := $(sort $(foreach D,$(src_dirs),$(call rwildcard,$D,*.cpp)))
+c_sources := $(sort $(foreach D,$(src_dirs),$(call rwildcard,$D,*.c)))
+S_sources := $(sort $(foreach D,$(src_dirs),$(call rwildcard,$D,*.S)))
 
 objects := $(addprefix $(out_dir)/,$(c_sources:%.c=%.o) $(cpp_sources:%.cpp=%.o) $(S_sources:%.S=%.o)) 
 
 CFLAGS += -DFIRMWARE_VERSION=\"$(FIRMWARE_VERSION)\"
 CFLAGS += -DBUILD_PROFILE=\"$(PROFILE)\"
+
 LFLAGS = $(LFLAGS.$(ARCH))
 
-all: $(build_dir)/$(program_name).hex
+all: tool-versions $(build_dir)/$(program_name).hex
+
+# Record the toolchain in the build log so a hex can be traced to the tools that made it.
+tool-versions:
+	@echo $(describe_env) TOOLS
+	@$(CC) --version | head -n 1
+	@$(LD) -Wl,--version | head -n 1
+	@$(MAKE) --version | head -n 1
+	@echo "  toolchain_dir=$(toolchain_dir)"
+
+.PHONY: all tool-versions clean addr2line
 
 $(objects): scripts/env.mk
 
-# Final linking of the ELF executable.
+# Final linking of the ELF executable. The map file is kept next to it.
 $(build_dir)/$(program_name).elf: $(objects) $(libraries)
-	@mkdir -p $(@D)	
+	@mkdir -p $(@D)
 	@echo $(describe_env) LINK $(describe_target)
-	@$(LD) $(CFLAGS) -o $@ $(objects) $(libraries) $(LFLAGS)
-	
+	@$(LD) $(CFLAGS) -o $@ $(objects) $(libraries) $(LFLAGS) -Wl,-Map=$(@:.elf=.map)
+
 # Strip the executable down to a memory-loadable binary.
 $(build_dir)/$(program_name).hex: $(build_dir)/$(program_name).elf
 	@echo $(describe_env) OBJCOPY $(describe_target)
 	@mkdir -p $(@D)
 	@$(SIZE) $<
 	@$(OBJCOPY) -O ihex -R .eeprom -R .fuse -R .lock -R .signature $< $@
+
+# A failed step must not leave a hex or ELF behind that looks good.
+.DELETE_ON_ERROR:
 
 clean:
 	rm -rf $(out_dir) $(program_name).*

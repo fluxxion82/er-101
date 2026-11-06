@@ -6,6 +6,13 @@
 testing/
 release/
 debug/
+build/
+
+# module backups made by tools/backup.sh (raw dumps of a user's unit, never committed)
+backups/
+
+# bench results (tools/bench)
+bench-results/
 
 tmp/
 
