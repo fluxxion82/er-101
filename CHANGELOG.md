@@ -4,6 +4,14 @@
 * SYS: A system-level change.  Usually only relevant to developers.
 * vN.NN*: Only releases marked with an asterik are relevant to ER-102 users.
 
+# v3.0.0 (unreleased)
+First release of the fluxxion82 fork of the ER-101 firmware. The upstream repo stops at v2.09 in this file while its code says v2.10; v2.10 added no entry, so this fork starts at 3.0 to mark the break.
+* SYS: Fixed the link layout. The upstream Makefile placed the reference voltage tables at 0x800137E8 instead of 0x80017360, so copying a table to USr1-8 wrote to unused flash and was lost, and put the program entry 8 bytes after the address the bootloader jumps to. A linker script now pins both and asserts the limits.
+* SYS: Every build is checked (tools/elfcheck.py, tools/hexcheck.py) and reproducible in a pinned toolchain container (`make docker-firmware`).
+* SYS: One source for the version (FIRMWARE_VERSION in scripts/env.mk), `make check-version`.
+* SYS: Host unit tests for the sequencer core (`make test`) and tooling for verified backups, restore and data-preserving upgrades (tools/).
+* Note for upgrading: the first boot after installing 3.0.0 over v2.09 or earlier resets the "last saved snapshot" setting once (the stored minor version is below 10). Over v2.10 it is kept. Snapshots and user tables themselves are preserved by tools/upgrade.sh.
+
 # v2.09*
 * FIX: While in HOLD mode, pressing COMMIT when the COPY LED is flashing would cause corruption of the sequence and eventually a crash.
 * FIX: There was no de-bouncing when sending button events to the ER-102.

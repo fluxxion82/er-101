@@ -40,9 +40,11 @@ S_sources := $(sort $(foreach D,$(src_dirs),$(call rwildcard,$D,*.S)))
 
 objects := $(addprefix $(out_dir)/,$(c_sources:%.c=%.o) $(cpp_sources:%.cpp=%.o) $(S_sources:%.S=%.o)) 
 
-CFLAGS += -DFIRMWARE_VERSION=\"$(FIRMWARE_VERSION)\"
 CFLAGS += -DBUILD_PROFILE=\"$(PROFILE)\"
 
+# version.h is generated from FIRMWARE_VERSION; src/meta.c includes it.
+version_h := $(out_dir)/generated/version.h
+includes += $(out_dir)/generated
 LFLAGS = $(LFLAGS.$(ARCH))
 
 all: tool-versions $(build_dir)/$(program_name).hex
@@ -57,7 +59,11 @@ tool-versions:
 
 .PHONY: all tool-versions clean addr2line
 
-$(objects): scripts/env.mk
+$(objects): scripts/env.mk $(version_h)
+
+$(version_h): scripts/env.mk scripts/gen-version.sh
+	@echo $(describe_env) VERSION $(FIRMWARE_VERSION)
+	@sh scripts/gen-version.sh $(FIRMWARE_VERSION) $@
 
 # Final linking of the ELF executable. The map file is kept next to it and
 # tools/elfcheck.py verifies the layout before the hex is produced.

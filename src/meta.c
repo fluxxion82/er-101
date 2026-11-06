@@ -7,17 +7,19 @@
 
 #include <asf.h>
 #include <meta.h>
+#include <version.h>
 
 meta_info_t meta_info;
 
+// The version has one source: FIRMWARE_VERSION in scripts/env.mk, via the generated version.h.
 #if DIAGNOSTIC_FIRMWARE
 #define MAJOR_VERSION 9
 #define MINOR_VERSION 9
 #define PATCH 0
 #else
-#define MAJOR_VERSION 2
-#define MINOR_VERSION 10
-#define PATCH 0
+#define MAJOR_VERSION FIRMWARE_VERSION_MAJOR
+#define MINOR_VERSION FIRMWARE_VERSION_MINOR
+#define PATCH FIRMWARE_VERSION_PATCH
 #endif
 
 void update_meta_info(void)

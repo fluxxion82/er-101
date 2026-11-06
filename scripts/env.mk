@@ -2,7 +2,9 @@
 # testing | release | debug
 PROFILE ?= release
 ARCH = avr32
-FIRMWARE_VERSION = 2.10
+# The only place the version is written. scripts/gen-version.sh turns it into
+# version.h for src/meta.c; tools/check-version.sh checks CHANGELOG.md and the tag.
+FIRMWARE_VERSION = 3.0.0
 
 scriptname := $(word 1, $(MAKEFILE_LIST))
 scriptname := $(scriptname:scripts/%=%)
