@@ -16,6 +16,9 @@ bench-results/
 
 tmp/
 
+## Python (tools/, tests/tools/)
+__pycache__/
+
 ## C/C++ specific
 
 # Prerequisites
