@@ -5,9 +5,15 @@ firmware:
 docker-firmware:
 	tools/docker/run.sh make firmware
 
-# Host tests: the sequencer core under clang or gcc with sanitizers (scripts/host.mk). See docs/build.md.
-test:
+# Host tests: the sequencer core under clang or gcc with sanitizers (scripts/host.mk)
+# and the flash tooling against a fake dfu-programmer (tests/tools). See docs/build.md.
+test: test-host test-tools
+
+test-host:
 	+$(MAKE) -f scripts/host.mk test
+
+test-tools:
+	python3 -I -m unittest discover -s tests/tools -p 'test_*.py'
 
 # FIRMWARE_VERSION in scripts/env.mk must match CHANGELOG.md and the tag.
 check-version:
@@ -20,4 +26,4 @@ clean:
 dist-clean:
 	rm -rf release debug testing build
 
-.PHONY: firmware docker-firmware test check-version clean dist-clean
+.PHONY: firmware docker-firmware test test-host test-tools check-version clean dist-clean
